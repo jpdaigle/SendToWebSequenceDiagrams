@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
+using System.Web.Script.Serialization;
 using System.IO;
+using System.Net;
 
 namespace SendToWebSequenceDiagrams
 {
@@ -73,14 +75,15 @@ namespace SendToWebSequenceDiagrams
         /// <param name="format">The output format requested. Must be one of the valid format supported</param>
         /// <returns>The full path of the downloaded image</returns>
         /// <exception cref="Exception">If an error occurred during the request</exception>
-        public static string GrabSequenceDiagram(String wsd, String format, string style, string baseUrl, Stream outStream)
+        public static void GrabSequenceDiagram(String wsd, String format, string style, string baseUrl, Stream outStream)
         {
             // Websequence diagram API:
             // prepare a POST body containing the required properties
-            StringBuilder sb = new StringBuilder("style=");
-            sb.Append(style).Append("&apiVersion=1&format=").Append(format).Append("&message=");
-            sb.Append(System.Web.HttpUtility.UrlEncode(wsd));
-            byte[] postBytes = Encoding.ASCII.GetBytes(sb.ToString());
+            string post = string.Format("style={0}&apiVersion=1&format={1}&message={2}", 
+                style, 
+                format, 
+                HttpUtility.UrlEncode(wsd));
+            byte[] postBytes = Encoding.ASCII.GetBytes(post);
 
             // Typical Microsoft crap here: the HttpWebRequest by default always append the header
             //          "Expect: 100-Continue"
@@ -91,8 +94,8 @@ namespace SendToWebSequenceDiagrams
 
             // set up request object
             System.Net.HttpWebRequest request;
-            // The following command might throw UriFormatException
             baseUrl = baseUrl.EndsWith("/") ? baseUrl : baseUrl + "/";
+            // The following command might throw UriFormatException
             request = System.Net.WebRequest.Create(baseUrl + "index.php") as System.Net.HttpWebRequest;
 
             request.Method = "POST";
@@ -100,66 +103,49 @@ namespace SendToWebSequenceDiagrams
             request.ContentLength = postBytes.Length;
 
             // add post data to request
-            System.IO.Stream postStream = request.GetRequestStream();
+            Stream postStream = request.GetRequestStream();
             postStream.Write(postBytes, 0, postBytes.Length);
             postStream.Close();
 
             System.Net.HttpWebResponse response = request.GetResponse() as System.Net.HttpWebResponse;
+            ValidateStatusOk(response);
 
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                throw new Exception("Unexpected HTTP status from server: " + response.StatusCode + ": " + response.StatusDescription);
-            }
-
-            System.IO.StreamReader stream = new System.IO.StreamReader(response.GetResponseStream());
+            StreamReader stream = new StreamReader(response.GetResponseStream());
             String jsonObject = stream.ReadToEnd();
             stream.Close();
 
             // Expect response like this one: {"img": "?png=mscKTO107", "errors": []}
-            // Instead of using a full JSON parser, do a simple parsing of the response
-            String[] components = jsonObject.Split('"');
-            // Ensure component #1 is 'img':
-            if (components[1].Equals("img") == false)
-            {
-                throw new Exception("Error parsing response from server: " + jsonObject);
-            }
-
-            String uri = components[3];
+            var responseBag = DeserializeJsonObject(jsonObject) as Dictionary<string, object>;
+            if (responseBag == null) 
+                throw new Exception("Unable to parse response: not a dictionary.");
+            if (!responseBag.ContainsKey("img")) 
+                throw new Exception("Unable to parse response: no img key.");
 
             // Now download the image
+            string uri = responseBag["img"].ToString();
             request = System.Net.WebRequest.Create(baseUrl + uri) as System.Net.HttpWebRequest;
             request.Method = "GET";
-
             response = request.GetResponse() as System.Net.HttpWebResponse;
-
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            ValidateStatusOk(response);
+            using (Stream src = response.GetResponseStream())
             {
-                throw new Exception("Server reported HTTP error during image fetch: " + response.StatusCode + ": " + response.StatusDescription);
-            }
-            try
-            {
-                System.IO.Stream srcStream = response.GetResponseStream();
-                string fileName = System.IO.Path.GetTempFileName();
-                //System.IO.FileStream dstStream = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
-
-                // Copy streams
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = srcStream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    outStream.Write(buffer, 0, read);
-                }
-                //dstStream.Close();
-                srcStream.Close();
-                return fileName;
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Exception while saving image to temp file: " + e.Message);
+                src.CopyTo(outStream);
             }
         }
 
+        public static object DeserializeJsonObject(string json)
+        {
+            var jss = new JavaScriptSerializer();
+            return jss.DeserializeObject(json);
+        }
 
+        public static void ValidateStatusOk(HttpWebResponse response)
+        {
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Did not get OK response: " + response.StatusDescription);
+            }
+        }
 
     }
 }
