@@ -12,26 +12,18 @@ namespace SendToWebSequenceDiagrams
 {
     public partial class Form1 : Form
     {
-        FileSystemWatcher _fsWatcher;
-        string _watchName;
-
+        FileReloader _fsReloader;
         public Form1()
         {
             InitializeComponent();
-
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length > 0)
-            {
-                _watchName = args[0];
-                FileInfo f = new FileInfo(_watchName);
-                _fsWatcher = new FileSystemWatcher(f.DirectoryName, f.Name);
-                _fsWatcher.Changed += new FileSystemEventHandler(FileChanged);
-            }
         }
 
-        private void FileChanged(object sender, FileSystemEventArgs e)
+        private void Refresh(string txt)
         {
-
+            LogMessage("Got MSC text, starting refresh.");
+            this.BeginInvoke(new Action(() => SetWait(true)));
+            WsdRequest req = new WsdRequest() { MSC = txt };
+            backgroundWorker1.RunWorkerAsync(req);
         }
 
         private void toolStripButton1_Click(object sender, EventArgs e)
@@ -74,6 +66,12 @@ namespace SendToWebSequenceDiagrams
         private void Form1_Load(object sender, EventArgs e)
         {
             LogMessage("Loaded...");
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 1)
+            {
+                _fsReloader = new FileReloader(args[1], new Action<string>((x) => Refresh(x)));
+            }
+
         }
 
         public void LogMessage(string s)
