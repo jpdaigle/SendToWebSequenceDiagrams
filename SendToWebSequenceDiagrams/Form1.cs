@@ -30,7 +30,6 @@ namespace SendToWebSequenceDiagrams
                 SetWait(true);
                 WsdRequest req = new WsdRequest() { MSC = txt };
                 submitBgTask(req);
-                //backgroundWorker1.RunWorkerAsync(req);
             }));
         }
 
@@ -170,6 +169,11 @@ namespace SendToWebSequenceDiagrams
             {
                 MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }));
+        }
+
+        private void toolStripButtonSave_Click(object sender, EventArgs e)
+        {
+            // Save the currently displayed image to a file.
         }
     }
 }
