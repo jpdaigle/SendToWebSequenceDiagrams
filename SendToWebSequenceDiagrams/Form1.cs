@@ -65,14 +65,24 @@ namespace SendToWebSequenceDiagrams
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            LogMessage("Loaded...");
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length > 1)
-            {
-                _fsReloader = new FileReloader(args[1], new Action<string>((x) => Refresh(x)));
-            }
             splitContainer1.Panel2Collapsed = true;
             pictureBox1.Location = new Point(0, 0);
+
+            string[] args = Environment.GetCommandLineArgs();
+            try
+            {
+                string path = null;
+                if (args.Length > 1)
+                {
+                    path = args[1];
+                    _fsReloader = new FileReloader(args[1], new Action<string>((x) => Refresh(x)));
+                }
+                this.Text = "WebSequenceDiagrams: " + path;
+            }
+            catch (Exception err)
+            {
+                PopError("Initialization error", err);
+            }
         }
 
         public void LogMessage(string s)
