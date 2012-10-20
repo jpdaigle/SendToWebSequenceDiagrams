@@ -49,7 +49,7 @@ namespace SendToWebSequenceDiagrams
             if (state)
             {
                 pbWait.SizeMode = PictureBoxSizeMode.AutoSize;
-                centerOn(pbWait, pictureBox1);
+                centerOn(pbWait, panel1);
                 pbWait.Visible = true;
             }
             else

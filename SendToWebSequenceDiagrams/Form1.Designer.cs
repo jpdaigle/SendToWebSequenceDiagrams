@@ -115,7 +115,6 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.panel1);
-            this.splitContainer1.Panel1.Controls.Add(this.pbWait);
             this.splitContainer1.Panel1.Margin = new System.Windows.Forms.Padding(5);
             // 
             // splitContainer1.Panel2
@@ -128,9 +127,9 @@
             // pbWait
             // 
             this.pbWait.Image = global::SendToWebSequenceDiagrams.Properties.Resources.hourglass;
-            this.pbWait.Location = new System.Drawing.Point(372, 96);
+            this.pbWait.Location = new System.Drawing.Point(372, 81);
             this.pbWait.Name = "pbWait";
-            this.pbWait.Size = new System.Drawing.Size(100, 50);
+            this.pbWait.Size = new System.Drawing.Size(100, 65);
             this.pbWait.TabIndex = 1;
             this.pbWait.TabStop = false;
             this.pbWait.Visible = false;
@@ -162,6 +161,7 @@
             // panel1
             // 
             this.panel1.AutoScroll = true;
+            this.panel1.Controls.Add(this.pbWait);
             this.panel1.Controls.Add(this.pictureBox1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
