@@ -20,10 +20,13 @@ namespace SendToWebSequenceDiagrams
 
         private void Refresh(string txt)
         {
-            LogMessage("Got MSC text, starting refresh.");
-            this.BeginInvoke(new Action(() => SetWait(true)));
-            WsdRequest req = new WsdRequest() { MSC = txt };
-            backgroundWorker1.RunWorkerAsync(req);
+            this.BeginInvoke(new Action(() => 
+            {
+                LogMessage(string.Format("Got MSC text ({0} chars, starting refresh.", txt.Length));
+                SetWait(true);
+                WsdRequest req = new WsdRequest() { MSC = txt };
+                backgroundWorker1.RunWorkerAsync(req);
+            }));
         }
 
         private void toolStripButton1_Click(object sender, EventArgs e)
@@ -64,6 +67,7 @@ namespace SendToWebSequenceDiagrams
                 _fsReloader = new FileReloader(args[1], new Action<string>((x) => Refresh(x)));
             }
             splitContainer1.Panel2Collapsed = true;
+            pictureBox1.Location = new Point(0, 0);
         }
 
         public void LogMessage(string s)
