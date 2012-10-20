@@ -13,6 +13,10 @@ namespace SendToWebSequenceDiagrams
     public partial class Form1 : Form
     {
         FileReloader _fsReloader;
+
+        object _nextTask = null;
+        object _nextTaskLock = new Object();
+
         public Form1()
         {
             InitializeComponent();
@@ -25,7 +29,8 @@ namespace SendToWebSequenceDiagrams
                 LogMessage(string.Format("Got MSC text ({0} chars, starting refresh.", txt.Length));
                 SetWait(true);
                 WsdRequest req = new WsdRequest() { MSC = txt };
-                backgroundWorker1.RunWorkerAsync(req);
+                submitBgTask(req);
+                //backgroundWorker1.RunWorkerAsync(req);
             }));
         }
 
@@ -76,6 +81,21 @@ namespace SendToWebSequenceDiagrams
             textBox1.Text += s;
         }
 
+        private void submitBgTask(WsdRequest req)
+        {
+            if (backgroundWorker1.IsBusy)
+            {
+                lock (_nextTaskLock)
+                {
+                    _nextTask = req;
+                }
+            }
+            else
+            {
+                backgroundWorker1.RunWorkerAsync(req);
+            }
+        }
+
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             // Load the request object we want to run.
@@ -95,10 +115,32 @@ namespace SendToWebSequenceDiagrams
                 WsdRequest req = e.Result as WsdRequest;
                 Stream ms = req.Result;
                 LogMessage("Got... " + ms.Length + " bytes");
-                Image imgLoaded = Image.FromStream(ms);
-                UpdateImage(imgLoaded);
+                if (ms.Length > 0)
+                {
+                    try
+                    {
+                        Image imgLoaded = Image.FromStream(ms);
+                        UpdateImage(imgLoaded);
+                    }
+                    catch (Exception err)
+                    {
+                        PopError("Error loading image", err);
+                    }
+                }
                 SetWait(false);
             }
+
+            WsdRequest next = null;
+            lock (_nextTaskLock)
+            {
+                if (_nextTask != null)
+                {
+                    next = _nextTask as WsdRequest;
+                    _nextTask = null;
+                }
+            }
+            if (next != null)
+                submitBgTask(next);
 
         }
 

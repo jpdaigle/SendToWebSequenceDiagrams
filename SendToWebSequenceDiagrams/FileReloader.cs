@@ -27,9 +27,21 @@ namespace SendToWebSequenceDiagrams
 
         private void FileChanged(object sender, FileSystemEventArgs e)
         {
-            string allText = File.ReadAllText(e.FullPath);
-            Console.WriteLine("dbg> file {0} reloaded {1} length", e.FullPath, allText.Length);
-            _handleContents(allText);
+            try
+            {
+                // need to open in shared mode
+                using (var fileStream = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var textReader = new StreamReader(fileStream))
+                {
+                    var allText = textReader.ReadToEnd();
+                    Console.WriteLine("dbg> file {0} reloaded {1} length", e.FullPath, allText.Length);
+                    _handleContents(allText);
+                }
+            }
+            catch (IOException ioe)
+            {
+                Console.WriteLine(ioe);
+            }
         }
 
 
