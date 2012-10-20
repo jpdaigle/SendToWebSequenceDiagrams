@@ -60,6 +60,13 @@ namespace SendToWebSequenceDiagrams.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap application_split {
+            get {
+                object obj = ResourceManager.GetObject("application_split", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap arrow_refresh {
             get {
                 object obj = ResourceManager.GetObject("arrow_refresh", resourceCulture);

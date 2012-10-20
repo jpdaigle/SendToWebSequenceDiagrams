@@ -84,6 +84,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="application_split.png" />
     <Content Include="arrow_refresh.png" />
     <Content Include="cog.png" />
     <Content Include="hourglass.png" />

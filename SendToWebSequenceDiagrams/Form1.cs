@@ -28,14 +28,6 @@ namespace SendToWebSequenceDiagrams
 
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
-            if (!backgroundWorker1.IsBusy)
-            {
-                string msc = "A->B: foobar";
-                LogMessage("going to grab image...");
-                WsdRequest req = new WsdRequest() { MSC = msc };
-                SetWait(true);
-                backgroundWorker1.RunWorkerAsync(req);
-            }
         }
 
         private void UpdateImage(Image img)
@@ -71,7 +63,7 @@ namespace SendToWebSequenceDiagrams
             {
                 _fsReloader = new FileReloader(args[1], new Action<string>((x) => Refresh(x)));
             }
-
+            splitContainer1.Panel2Collapsed = true;
         }
 
         public void LogMessage(string s)
@@ -104,6 +96,24 @@ namespace SendToWebSequenceDiagrams
                 SetWait(false);
             }
 
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        {
+            ToolStripButton btn = sender as ToolStripButton;
+            splitContainer1.Panel2Collapsed = (!btn.Checked);
+        }
+
+        public void PopError(string msg, Exception e = null)
+        {
+            if (e != null)
+            {
+                msg += "\r\n\r\n" + e.ToString();
+            }
+            this.BeginInvoke(new Action(() =>
+            {
+                MessageBox.Show(msg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }));
         }
     }
 }
