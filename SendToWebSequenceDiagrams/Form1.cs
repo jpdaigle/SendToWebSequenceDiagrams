@@ -12,9 +12,26 @@ namespace SendToWebSequenceDiagrams
 {
     public partial class Form1 : Form
     {
+        FileSystemWatcher _fsWatcher;
+        string _watchName;
+
         public Form1()
         {
             InitializeComponent();
+
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 0)
+            {
+                _watchName = args[0];
+                FileInfo f = new FileInfo(_watchName);
+                _fsWatcher = new FileSystemWatcher(f.DirectoryName, f.Name);
+                _fsWatcher.Changed += new FileSystemEventHandler(FileChanged);
+            }
+        }
+
+        private void FileChanged(object sender, FileSystemEventArgs e)
+        {
+
         }
 
         private void toolStripButton1_Click(object sender, EventArgs e)
